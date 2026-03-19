@@ -17,6 +17,9 @@
     "streaming",
     "free-agents"
   ],
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
   "license": "MIT",
   "dependencies": {
     "selfsigned": "^2.4.1"
