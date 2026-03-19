@@ -1,0 +1,24 @@
+{
+  "name": "fantasy-hockey-streamer",
+  "version": "1.0.0",
+  "description": "Fantasy hockey streaming optimizer — find the best free agent pickups to maximize weekly games played",
+  "main": "lib/stream.js",
+  "bin": {
+    "stream": "bin/stream.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "fantasy",
+    "hockey",
+    "nhl",
+    "yahoo",
+    "streaming",
+    "free-agents"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "selfsigned": "^2.4.1"
+  }
+}
