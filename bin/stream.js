@@ -144,10 +144,12 @@ Usage:
   stream --next                   Analyze next week
   stream --week <num>             Analyze specific fantasy week
   stream --date <YYYY-MM-DD>      Analyze week containing date
-  stream --adds-used <n>          Already used n adds this week
+  stream --adds-used <n>          Override auto-detected adds used
   stream --goalies                Include goalie slots in analysis
   stream --add "<Name>"           Simulate adding a player
   stream --add "<Name>:<Day>"     Simulate adding starting on a day
+  stream --no-matchup             Skip matchup adjustment (raw league weights)
+  stream --boost "HIT,BLK"       Manually boost specific categories (2.5x)
 
 Subcommands:
   stream setup                    Run setup wizard
