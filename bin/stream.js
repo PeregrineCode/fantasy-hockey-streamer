@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { hasConfig, resolveCredentials, resolveLeague, TOKEN_FILE, CERTS_DIR, CONFIG_DIR, loadConfig, saveConfig } = require('../lib/config');
+const { hasConfig, resolveCredentials, resolveLeague, TOKEN_FILE, CERTS_DIR, CONFIG_DIR, loadConfig, saveConfig, saveCachedSettings } = require('../lib/config');
 const fs = require('fs');
 
 const args = process.argv.slice(2);
@@ -123,6 +123,13 @@ async function runLeagues() {
   // Save updated aliases
   saveConfig({ ...config, leagues: leagueAliases });
 
+  // Cache league settings (saves an API call on each run)
+  console.log('Caching league settings...');
+  for (const lg of leagues) {
+    const settings = await client.getLeagueSettings(lg.leagueKey);
+    saveCachedSettings(lg.leagueKey, settings);
+  }
+
   for (const lg of leagues) {
     const alias = Object.entries(leagueAliases).find(([, k]) => k === lg.leagueKey)?.[0];
     const scoring = lg.scoringType === 'headpoint' ? 'Points' : 'Categories';
@@ -181,6 +188,7 @@ Usage:
   stream --add "<Name>:<Day>"     Simulate adding starting on a day
   stream --no-matchup             Skip matchup adjustment (raw league weights)
   stream --boost "HIT,BLK"        Manually boost specific categories (2.5x)
+  stream --refresh-settings       Re-fetch league settings from Yahoo
 
 Subcommands:
   stream setup                    Run setup wizard
