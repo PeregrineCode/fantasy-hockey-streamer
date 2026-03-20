@@ -156,7 +156,7 @@ describe('findDropCandidates', () => {
 
   const emptyDays = [];
 
-  it('returns bottom 25% by drop value', () => {
+  it('returns players at or below median drop value', () => {
     const players = [
       makeRosterPlayer('Best', 20),
       makeRosterPlayer('Good', 15),
@@ -166,8 +166,12 @@ describe('findDropCandidates', () => {
     const teamGameDays = new Map([['TOR', ['2099-12-31']]]);
     const days = makeDaysForDropTest(players);
     const drops = findDropCandidates(players, teamGameDays, days);
-    assert.equal(drops.length, 1); // ceil(4 * 0.25) = 1
+    // Weak and Mid are benched (only 2 slots), so dropValue = quality * 0.1
+    // Best and Good start, dropValue = quality * 1
+    // Median is the 2nd value in sorted order — both benched players should surface
+    assert.ok(drops.length >= 2, `expected at least 2 drops, got ${drops.length}`);
     assert.equal(drops[0].name, 'Weak');
+    assert.equal(drops[1].name, 'Mid');
   });
 
   it('ranks benched players as better drop candidates', () => {
