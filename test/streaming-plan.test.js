@@ -132,21 +132,69 @@ describe('findDropCandidates', () => {
       isIR: false,
       quality,
       stats: {},
+      playingPositions: ['C'],
+      eligiblePositions: ['C'],
       ...opts,
     };
   }
 
-  it('returns bottom 25% of roster by quality', () => {
+  // Days where all TOR players play but slots are tight (some get benched)
+  function makeDaysForDropTest(players) {
+    // Single future day where all TOR players are "playing" but with limited slots
+    // We need playingPlayers and benched arrays to match what analyzeDays produces
+    const playing = players.filter(p => !p.isIR);
+    // Simulate: best quality players start, worst get benched
+    const sorted = [...playing].sort((a, b) => (b.quality || 0) - (a.quality || 0));
+    const starters = sorted.slice(0, 2); // only 2 slots
+    const benchedPlayers = sorted.slice(2);
+    return [{
+      date: '2099-12-31', isPast: false, numberOfGames: 8, isOffNight: false,
+      playingPlayers: playing, benched: benchedPlayers,
+      filled: { C: 2 }, empty: { C: 0 }, totalEmpty: 0, totalFilled: 2, totalSlots: 2,
+    }];
+  }
+
+  const emptyDays = [];
+
+  it('returns bottom 25% by drop value', () => {
     const players = [
       makeRosterPlayer('Best', 20),
       makeRosterPlayer('Good', 15),
       makeRosterPlayer('Mid', 10),
       makeRosterPlayer('Weak', 5),
     ];
-    const teamGameDays = new Map([['TOR', ['2026-03-17']]]);
-    const drops = findDropCandidates(players, teamGameDays);
+    const teamGameDays = new Map([['TOR', ['2099-12-31']]]);
+    const days = makeDaysForDropTest(players);
+    const drops = findDropCandidates(players, teamGameDays, days);
     assert.equal(drops.length, 1); // ceil(4 * 0.25) = 1
     assert.equal(drops[0].name, 'Weak');
+  });
+
+  it('ranks benched players as better drop candidates', () => {
+    // Higher quality but benched every game vs lower quality but starts
+    const benchedStar = makeRosterPlayer('BenchedStar', 12, { nhlTeam: 'MTL' });
+    const weakStarter = makeRosterPlayer('WeakStarter', 8, { nhlTeam: 'TOR' });
+    const players = [benchedStar, weakStarter];
+
+    const teamGameDays = new Map([
+      ['MTL', ['2099-12-31']],
+      ['TOR', ['2099-12-31']],
+    ]);
+    // Day where TOR player starts, MTL player is benched
+    const days = [{
+      date: '2099-12-31', isPast: false, numberOfGames: 8, isOffNight: false,
+      playingPlayers: [benchedStar, weakStarter],
+      benched: [benchedStar], // benchedStar doesn't make the lineup
+      filled: { C: 1 }, empty: {}, totalEmpty: 0, totalFilled: 1, totalSlots: 1,
+    }];
+
+    const drops = findDropCandidates(players, teamGameDays, days);
+    // BenchedStar: quality 12 * 0.1 (0 starts) = 1.2
+    // WeakStarter: quality 8 * 1 (1 start) = 8
+    // BenchedStar should be the better drop candidate (lower dropValue)
+    assert.equal(drops[0].name, 'BenchedStar');
+    assert.equal(drops[0].starts, 0);
+    assert.equal(drops[0].benched, 1);
   });
 
   it('excludes goalies', () => {
@@ -155,7 +203,7 @@ describe('findDropCandidates', () => {
       makeRosterPlayer('Goalie', 1, { isGoalie: true }),
     ];
     const teamGameDays = new Map([['TOR', []]]);
-    const drops = findDropCandidates(players, teamGameDays);
+    const drops = findDropCandidates(players, teamGameDays, emptyDays);
     assert.ok(drops.every(d => !d.isGoalie));
   });
 
@@ -165,7 +213,7 @@ describe('findDropCandidates', () => {
       makeRosterPlayer('Injured', 1, { isIR: true }),
     ];
     const teamGameDays = new Map([['TOR', []]]);
-    const drops = findDropCandidates(players, teamGameDays);
+    const drops = findDropCandidates(players, teamGameDays, emptyDays);
     assert.ok(drops.every(d => !d.isIR));
   });
 
@@ -175,7 +223,7 @@ describe('findDropCandidates', () => {
       makeRosterPlayer('Drop', 3),
     ];
     const teamGameDays = new Map([['TOR', []]]);
-    const drops = findDropCandidates(players, teamGameDays, new Set(['465.p.drop']));
+    const drops = findDropCandidates(players, teamGameDays, emptyDays, new Set(['465.p.drop']));
     assert.ok(drops.every(d => d.playerKey !== '465.p.drop'));
   });
 });
