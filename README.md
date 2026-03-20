@@ -63,7 +63,14 @@ Configuration is stored in `~/.config/fantasy-hockey-streamer/`.
 # Current week, default league
 stream
 
-# Specific league
+# Switch leagues by alias (auto-generated from league names during setup)
+stream work
+stream keeper
+
+# Prefix matching works too
+stream ke
+
+# Or use the full Yahoo league key
 stream 465.l.26962
 
 # Next week
@@ -100,12 +107,19 @@ stream --next --add "Schneider:Tue" --add "Benoit" --goalies
 ### Subcommands
 
 ```bash
-stream setup      # Re-run the setup wizard
-stream auth       # Re-authenticate with Yahoo
-stream leagues    # List your NHL fantasy leagues
-stream status     # Show config, token expiry, default league
-stream help       # Usage information
+stream setup              # Re-run the setup wizard
+stream auth               # Re-authenticate with Yahoo
+stream leagues            # List your leagues and aliases
+stream leagues --refresh  # Re-fetch leagues from Yahoo and update aliases
+stream status             # Show config, token expiry, default league
+stream help               # Usage information
 ```
+
+### League Aliases
+
+During setup, short aliases are auto-generated from your league names (first word, lowercased). If you're in "Work League" and "Keeper League", you get aliases `work` and `keeper`. Aliases are case-insensitive and support prefix matching.
+
+Run `stream leagues` to see your aliases, or `stream leagues --refresh` to re-sync after joining or leaving a league.
 
 ## Configuration
 
